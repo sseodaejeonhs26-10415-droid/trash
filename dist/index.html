@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14664b">
+  <meta name="description" content="내 주변 길가 쓰레기통을 찾고, 더 깨끗한 거리를 함께 만드는 길담">
+  <title>길담 · 가까운 길가 쓰레기통</title>
+  <link rel="stylesheet" href="vendor/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="vendor/leaflet.js"></script>
+  <script defer src="vendor/exifr.js"></script>
+  <script defer src="bins.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="header">
+    <a class="brand" href="./" aria-label="길담 처음으로"><span class="brand-icon">♧</span> 길담<span class="brand-caption">깨끗한 거리의 시작</span></a>
+    <nav aria-label="주 메뉴"><button class="nav-active" id="map-tab">쓰레기통 찾기</button><button id="activity">나의 참여</button><button id="help">이용 안내</button></nav>
+    <button class="primary header-report" id="report-top">＋ 쓰레기통 제보</button>
+  </header>
+  <main class="workspace">
+    <aside class="sidebar">
+      <div class="intro"><span class="eyebrow">작은 실천, 깨끗한 우리 동네</span><h1>버릴 곳을 찾는<br> 가장 가까운 방법.</h1><p>길 위의 쓰레기통을 함께 찾아요.</p></div>
+      <div class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="쓰레기통 이름 또는 장소 검색" aria-label="쓰레기통 이름 또는 장소 검색"></div>
+      <div class="filter-row"><label class="check"><input type="checkbox" id="available" checked> 이용 가능만</label><label class="radius-label">반경 <select id="radius" aria-label="검색 반경"><option value="500">500m</option><option value="1000" selected>1km</option><option value="3000">3km</option><option value="Infinity">전체</option></select></label></div>
+      <button id="locate" class="location-button">◎ 내 위치로 찾기</button>
+      <p class="location-note" id="location-note">서울시청 기준 · 지도를 눌러 기준 위치를 바꿀 수 있어요.</p>
+      <div class="list-heading"><h2>주변 쓰레기통 <span id="count">0</span></h2><span>직선거리순</span></div>
+      <div id="list" class="bin-list" aria-live="polite"></div>
+      <div class="sidebar-bottom"><span class="small-leaf">♧</span><p>쓰레기는 제자리에,<br><strong>우리의 거리는 더 깨끗하게.</strong></p><button id="report-bottom" aria-label="새 쓰레기통 제보">＋</button></div>
+    </aside>
+    <section class="map-area" aria-label="주변 쓰레기통 지도">
+      <div id="map"></div>
+      <div class="map-label"><span class="green-dot"></span> 우리 동네 쓰레기통 지도 <span class="demo-tag">예시 데이터</span></div>
+      <div id="map-error" class="map-error" hidden>지도 배경을 불러오지 못했어요. 인터넷 연결을 확인해주세요. 목록과 제보 기능은 계속 사용할 수 있어요.</div>
+      <div class="legend"><span><i class="legend-dot normal"></i>이용 가능</span><span><i class="legend-dot full"></i>가득 참</span><span><i class="legend-dot me"></i>기준 위치</span></div>
+      <div class="map-bottom"><span class="spark">✦</span><div><strong id="nearest-title">가까운 쓰레기통을 찾아보세요</strong><p id="nearest-text">작은 실천으로 더 깨끗한 거리를 만들어요.</p></div><button id="nearest" class="primary">가까운 곳 보기</button></div>
+    </section>
+  </main>
+  <dialog id="report-dialog">
+    <div class="dialog-heading"><div><span class="eyebrow">함께 채우는 우리 동네 지도</span><h2>새 쓰레기통 제보</h2></div><button class="close" data-close aria-label="닫기">×</button></div>
+    <form id="report-form">
+      <label>쓰레기통 이름<input id="bin-name" required maxlength="50" placeholder="예: 시청역 4번 출구 앞"></label>
+      <div class="upload"><label for="photo"><span class="upload-icon">▧</span><strong>쓰레기통 사진 선택</strong><span>GPS가 포함된 JPG · 최대 8MB</span></label><input id="photo" type="file" accept="image/jpeg" required><img id="photo-preview" alt="제보 사진 미리보기" hidden></div>
+      <p id="photo-info" class="hint">사진은 이 브라우저에만 저장됩니다. 기기의 카메라 위치 태그를 켜주세요.</p>
+      <div class="coords"><label>위도<input id="latitude" type="number" min="-90" max="90" step="any" required></label><label>경도<input id="longitude" type="number" min="-180" max="180" step="any" required></label></div>
+      <button type="button" class="text-button" id="pick-point">지도에서 제보 위치 선택</button>
+      <label class="check street-check"><input type="checkbox" id="outdoor" required> 건물 내부가 아닌 길가의 쓰레기통입니다.</label>
+      <div class="notice">사진 GPS와 제보 위치가 100m 이내인지 확인합니다. 실제 존재 여부와 야외 설치 여부는 별도 검토 후 승인됩니다.</div>
+      <p id="report-error" role="alert" class="error"></p>
+      <button class="primary submit" id="submit-report" type="submit">사진·위치 확인하고 제보하기</button>
+    </form>
+  </dialog>
+  <dialog id="activity-dialog">
+    <div class="dialog-heading"><div><span class="eyebrow">내가 만드는 깨끗한 거리</span><h2>나의 참여</h2></div><button class="close" data-close aria-label="닫기">×</button></div>
+    <div class="reward-card"><span>승인된 신규 제보</span><strong><b id="report-count">0</b>건</strong><progress id="progress" max="5" value="0"></progress><p id="reward-text"></p></div>
+    <p class="hint">이 브라우저의 연습용 기록입니다. 실제 포인트나 혜택으로 교환되지 않아요.</p>
+    <h3>내 제보 기록</h3><div id="reports-list"></div>
+    <details class="review-panel"><summary>검토 기능 체험하기</summary><p class="hint">운영자 검토 과정을 시험하는 기능입니다. 실제 서비스에서는 서버와 운영자 권한이 필요합니다. 사진을 보고 야외 쓰레기통인지 확인한 뒤 승인하세요.</p><div id="review-list"></div></details>
+  </dialog>
+  <dialog id="help-dialog">
+    <div class="dialog-heading"><h2>길담 이용 안내</h2><button class="close" data-close aria-label="닫기">×</button></div>
+    <div class="help-item"><span>◎</span><div><h3>가까운 곳부터 찾아요</h3><p>내 위치를 허용하거나 지도를 눌러 기준 위치를 선택하세요. 거리는 직선거리이며 실제 보행 거리와 달라요. 길 안내는 외부 지도에서 확인할 수 있어요.</p></div></div>
+    <div class="help-item"><span>▧</span><div><h3>사진으로 지도를 채워요</h3><p>GPS가 담긴 JPG 사진과 위치를 제보하세요. 위치가 일치해도 실제 존재와 야외 여부는 검토가 필요해요. EXIF 정보만으로 허위 제보를 완전히 막을 수는 없어요.</p></div></div>
+    <div class="help-item"><span>◷</span><div><h3>가득 참은 24시간 동안</h3><p>쓰레기통을 선택해 가득 참을 알려주세요. 중복 제보는 받지 않으며, 24시간이 지나면 자동 해제돼요. 일반 표시는 상태 제보가 없다는 뜻이며, 이용 가능을 보장하지 않아요.</p></div></div>
+    <div class="notice">현재 위치는 시연용 예시이며 실제 쓰레기통 위치가 아닙니다. 기록과 사진은 기기별 브라우저에 저장되며 다른 사용자와 공유되지 않습니다. 실제 운영에는 공공데이터 연동, 서버 저장 및 운영자 검토가 필요합니다.</div>
+  </dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>
